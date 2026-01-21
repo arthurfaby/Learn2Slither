@@ -1,0 +1,1 @@
+QValuesType = list[float]

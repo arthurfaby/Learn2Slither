@@ -1,0 +1,37 @@
+# App constants
+APP_NAME = "Learn2Slither"
+
+# Game constants
+BOARD_SIZE = 50
+SNAKE_INITIAL_LENGTH = 3
+MOVE_DELAY_MS = 5  # Delay between snake moves in milliseconds
+DEFAULT_GREEN_APPLES = 100
+DEFAULT_RED_APPLES = 50
+
+# UI constants
+WINDOW_HEIGHT = 600
+# Width is height (for square board) plus space for stats, controls, etc.
+WINDOW_WIDTH = WINDOW_HEIGHT + 400
+CELL_SIZE = WINDOW_HEIGHT/BOARD_SIZE
+
+# Colors
+BACKGROUND_COLOR = (0,0,0)
+CELL_BACKGROUND_COLOR = (20, 20, 20)
+CELL_BORDER_COLOR = (50, 50, 50)
+SNAKE_COLOR = (200, 200, 0)
+GREEN_APPLE_COLOR = (0, 200, 0)
+RED_APPLE_COLOR = (200, 0, 0)
+
+# Interpreter constants
+GREEN_APPLE_REWARD = 10
+RED_APPLE_REWARD = -10
+DEATH_REWARD = -100
+NOTHING_REWARD = -1
+
+# Agent constants
+LEARNING_RATE = 0.001
+DISCOUNT_FACTOR = 0.9
+DEFAULT_EPSILON = 1.0
+EPSILON_DECAY = 0.995
+MIN_EPSILON = 0.01
+
