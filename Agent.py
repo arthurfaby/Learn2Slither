@@ -3,6 +3,7 @@ import pickle
 import random
 
 import config
+from GameConfig import GameConfig
 from enums.SnakeDirection import SnakeDirection
 from custom_types.QStateType import QStateType
 from custom_types.QValuesType import QValuesType
@@ -10,6 +11,7 @@ from utils.get_snake_direction_from_int import get_snake_direction_from_int
 
 
 class Agent:
+    game_config: GameConfig
     q_table: dict[QStateType, QValuesType]
     learning_rate: float
     discount_factor: float
@@ -17,7 +19,8 @@ class Agent:
     epsilon_decay: float
     min_epsilon: float
 
-    def __init__(self):
+    def __init__(self, game_config: GameConfig):
+        self.game_config = game_config
         self.q_table = {}
         self.learning_rate = config.LEARNING_RATE
         self.discount_factor = config.DISCOUNT_FACTOR
@@ -53,17 +56,23 @@ class Agent:
     def update_epsilon(self):
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
 
-    def save_model(self, filepath="models/brain.pkl"):
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    def save_model(self, filepath):
+        if not filepath:
+            return
+        directory = os.path.dirname(filepath)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
         with open(filepath, "wb") as f:
             pickle.dump(self.q_table, f)
         print(f"Model saved : {filepath}")
 
-    def load_model(self, filepath="models/brain.pkl"):
+    def load_model(self, filepath):
+        if not filepath:
+            return
         if os.path.exists(filepath):
             with open(filepath, "rb") as f:
                 self.q_table = pickle.load(f)
-            print(f"Model upload ! Memory size : {len(self.q_table)} states.")
+            print(f"Model uploaded from : {filepath}.")
             self.epsilon = self.min_epsilon
         else:
             print("Model not found.")

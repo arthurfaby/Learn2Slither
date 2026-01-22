@@ -1,6 +1,7 @@
 import pygame
 from pygame import Surface
 import config
+from GameConfig import GameConfig
 from enums.CellType import CellType
 import random
 
@@ -10,7 +11,8 @@ from utils.check_cell_in_board import check_cell_in_board
 
 
 class Environment:
-    screen: Surface
+    game_config: GameConfig
+    screen: Surface | None
     board: list[list[CellType]]
     snake_direction: tuple[int, int]
     snake_head: tuple[int, int]
@@ -18,9 +20,10 @@ class Environment:
     direction_has_been_used: bool
     duration: int
 
-    def __init__(self, screen: Surface):
+    def __init__(self, screen: Surface | None, game_config: GameConfig):
         self.screen = screen
-        self.board = [[CellType.EMPTY for _ in range(config.BOARD_SIZE)] for _ in range(config.BOARD_SIZE)]
+        self.game_config = game_config
+        self.board = [[CellType.EMPTY for _ in range(self.game_config.board_size)] for _ in range(self.game_config.board_size)]
         self.snake_direction = (1, 0)
         self.snake_head = (0, 0)
         self.snake_body = []
@@ -43,7 +46,7 @@ class Environment:
         new_head_y = self.snake_head[1] + self.snake_direction[1]
 
         # Check for collisions
-        if not check_cell_in_board(new_head_x, new_head_y) or self.board[new_head_x][new_head_y] == CellType.SNAKE:
+        if not check_cell_in_board(self.game_config.board_size, new_head_x, new_head_y) or self.board[new_head_x][new_head_y] == CellType.SNAKE:
             return EnvironmentEvent.DIED
 
         if self.board[new_head_x][new_head_y] == CellType.GREEN_APPLE:
@@ -67,33 +70,17 @@ class Environment:
         return event
 
     def restart(self):
-        self.__init__(self.screen)
+        self.__init__(self.screen, self.game_config)
 
     def draw(self):
-        # Draw cells for snake game
-        for x in range(config.BOARD_SIZE):
-            for y in range(config.BOARD_SIZE):
-                rect = (x * config.CELL_SIZE, y * config.CELL_SIZE, config.CELL_SIZE, config.CELL_SIZE)
-                pygame.draw.rect(self.screen, self.board[y][x].get_color(), rect, int(config.CELL_SIZE))
-                pygame.draw.rect(self.screen, config.CELL_BORDER_COLOR, rect, 1)
-
-    def check_key_pressed(self, key_pressed: int):
-        if not self.direction_has_been_used:
+        if not self.game_config.visualize:
             return
-        self.direction_has_been_used = False
-        match key_pressed:
-            case pygame.K_UP:
-                if self.snake_direction != (1, 0):
-                    self.snake_direction = (-1, 0)
-            case pygame.K_DOWN:
-                if self.snake_direction != (-1, 0):
-                    self.snake_direction = (1, 0)
-            case pygame.K_LEFT:
-                if self.snake_direction != (0, 1):
-                    self.snake_direction = (0, -1)
-            case pygame.K_RIGHT:
-                if self.snake_direction != (0, -1):
-                    self.snake_direction = (0, 1)
+        # Draw cells for snake game
+        for x in range(self.game_config.board_size):
+            for y in range(self.game_config.board_size):
+                rect = (x * self.game_config.cell_size, y * self.game_config.cell_size, self.game_config.cell_size, self.game_config.cell_size)
+                pygame.draw.rect(self.screen, self.board[y][x].get_color(), rect, int(self.game_config.cell_size))
+                pygame.draw.rect(self.screen, config.CELL_BORDER_COLOR, rect, 1)
 
     def __update_direction_from_action(self, action: SnakeDirection):
         if action == SnakeDirection.UP and self.snake_direction != (1, 0):
@@ -116,8 +103,8 @@ class Environment:
 
     def __get_random_empty_cell(self) -> tuple[int, int]:
         while True:
-            x = random.randint(0, config.BOARD_SIZE - 1)
-            y = random.randint(0, config.BOARD_SIZE - 1)
+            x = random.randint(0, self.game_config.board_size - 1)
+            y = random.randint(0, self.game_config.board_size - 1)
             if self.board[x][y] == CellType.EMPTY:
                 return x, y
 
@@ -135,7 +122,7 @@ class Environment:
             for i in range(config.SNAKE_INITIAL_LENGTH):
                 nx, ny = x + i * dx, y + i * dy
                 # Check if the cell is within bounds and empty
-                if not check_cell_in_board(nx, ny) or not self.__is_cell_empty(nx, ny):
+                if not check_cell_in_board(self.game_config.board_size, nx, ny) or not self.__is_cell_empty(nx, ny):
                     can_place = False
                     break
             if can_place:
