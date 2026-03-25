@@ -34,22 +34,28 @@ class Agent:
         return self.q_table[state]
 
     def get_action(self, state, is_training=False) -> SnakeDirection:
-        if  is_training and random.random() < self.epsilon:
-            return random.choice([SnakeDirection.UP, SnakeDirection.DOWN, SnakeDirection.LEFT, SnakeDirection.RIGHT])  # Exploration
+        if is_training and random.random() < self.epsilon:
+            return random.choice(
+                [SnakeDirection.UP, SnakeDirection.DOWN, SnakeDirection.LEFT,
+                 SnakeDirection.RIGHT])
         else:
             q_values = self.get_q_values(state)
-            # Choose the action with the highest Q-value (with random tie-breaking)
+            # Choose the action with the highest Q-value
+            # (with random tie-breaking)
             max_q = max(q_values)
-            actions_with_max_q = [get_snake_direction_from_int(i) for i, val in enumerate(q_values) if val == max_q]
+            actions_with_max_q = [get_snake_direction_from_int(i) for i, val in
+                                  enumerate(q_values) if val == max_q]
             return random.choice(actions_with_max_q)
 
-    def learn(self, state: QStateType, action: SnakeDirection, reward: int, next_state: QStateType):
+    def learn(self, state: QStateType, action: SnakeDirection, reward: int,
+              next_state: QStateType):
         if not (0 <= action.get_value() <= 3):
             raise ValueError("Action must be between 0 and 3")
         current_q = self.get_q_values(state)[action.get_value()]
         max_future_q = max(self.get_q_values(next_state))
         # Bellman equation
-        new_q = current_q + self.learning_rate * (reward + self.discount_factor * max_future_q - current_q)
+        new_q = current_q + self.learning_rate * (
+                reward + self.discount_factor * max_future_q - current_q)
 
         self.q_table[state][action.get_value()] = new_q
 

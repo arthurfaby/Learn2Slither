@@ -23,7 +23,9 @@ class Environment:
     def __init__(self, screen: Surface | None, game_config: GameConfig):
         self.screen = screen
         self.game_config = game_config
-        self.board = [[CellType.EMPTY for _ in range(self.game_config.board_size)] for _ in range(self.game_config.board_size)]
+        self.board = [
+            [CellType.EMPTY for _ in range(self.game_config.board_size)] for _
+            in range(self.game_config.board_size)]
         self.snake_direction = (1, 0)
         self.snake_head = (0, 0)
         self.snake_body = []
@@ -46,7 +48,11 @@ class Environment:
         new_head_y = self.snake_head[1] + self.snake_direction[1]
 
         # Check for collisions
-        if not check_cell_in_board(self.game_config.board_size, new_head_x, new_head_y) or self.board[new_head_x][new_head_y] == CellType.SNAKE:
+        if (not check_cell_in_board(
+                self.game_config.board_size,
+                new_head_x,
+                new_head_y)
+                or self.board[new_head_x][new_head_y] == CellType.SNAKE):
             return EnvironmentEvent.DIED
 
         if self.board[new_head_x][new_head_y] == CellType.GREEN_APPLE:
@@ -57,7 +63,8 @@ class Environment:
         elif self.board[new_head_x][new_head_y] == CellType.RED_APPLE:
             self.__decrease_snake_length()
             self.__add_red_apple()
-            if len(self.snake_body) == 0: return EnvironmentEvent.DIED
+            if len(self.snake_body) == 0:
+                return EnvironmentEvent.DIED
             event = EnvironmentEvent.EATEN_RED_APPLE
         else:
             event = EnvironmentEvent.NOTHING
@@ -78,9 +85,13 @@ class Environment:
         # Draw cells for snake game
         for x in range(self.game_config.board_size):
             for y in range(self.game_config.board_size):
-                rect = (x * self.game_config.cell_size, y * self.game_config.cell_size, self.game_config.cell_size, self.game_config.cell_size)
-                pygame.draw.rect(self.screen, self.board[y][x].get_color(), rect, int(self.game_config.cell_size))
-                pygame.draw.rect(self.screen, config.CELL_BORDER_COLOR, rect, 1)
+                rect = (x * self.game_config.cell_size,
+                        y * self.game_config.cell_size,
+                        self.game_config.cell_size, self.game_config.cell_size)
+                pygame.draw.rect(self.screen, self.board[y][x].get_color(),
+                                 rect, int(self.game_config.cell_size))
+                pygame.draw.rect(self.screen, config.CELL_BORDER_COLOR, rect,
+                                 1)
 
     def __update_direction_from_action(self, action: SnakeDirection):
         if action == SnakeDirection.UP and self.snake_direction != (1, 0):
@@ -89,7 +100,8 @@ class Environment:
             self.snake_direction = (1, 0)
         elif action == SnakeDirection.LEFT and self.snake_direction != (0, 1):
             self.snake_direction = (0, -1)
-        elif action == SnakeDirection.RIGHT and self.snake_direction != (0, -1):
+        elif action == SnakeDirection.RIGHT and self.snake_direction != (0,
+                                                                         -1):
             self.snake_direction = (0, 1)
 
     def __increase_snake_length(self):
@@ -122,7 +134,9 @@ class Environment:
             for i in range(config.SNAKE_INITIAL_LENGTH):
                 nx, ny = x + i * dx, y + i * dy
                 # Check if the cell is within bounds and empty
-                if not check_cell_in_board(self.game_config.board_size, nx, ny) or not self.__is_cell_empty(nx, ny):
+                if not check_cell_in_board(self.game_config.board_size, nx,
+                                           ny) or not self.__is_cell_empty(nx,
+                                                                           ny):
                     can_place = False
                     break
             if can_place:

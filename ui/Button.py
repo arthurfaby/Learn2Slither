@@ -1,7 +1,12 @@
 import pygame
 
+
 class Button:
-    def __init__(self, x, y, width, height, text, font, action=None, background_color=(70, 70, 70),  hover_background_color=(100, 100, 100), text_color=(255, 255, 255), hover_text_color=(255, 255, 255), border_color=(200, 200, 200)):
+    def __init__(self, x, y, width, height, text, font, action=None,
+                 background_color=(70, 70, 70),
+                 hover_background_color=(100, 100, 100),
+                 text_color=(255, 255, 255), hover_text_color=(255, 255, 255),
+                 border_color=(200, 200, 200)):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.font = font
@@ -16,7 +21,7 @@ class Button:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.current_background_color, self.rect)
-        pygame.draw.rect(screen, self.border_color, self.rect, 2) # Bordure
+        pygame.draw.rect(screen, self.border_color, self.rect, 2)  # Bordure
 
         text_surf = self.font.render(self.text, True, (255, 255, 255))
         text_rect = text_surf.get_rect(center=self.rect.center)

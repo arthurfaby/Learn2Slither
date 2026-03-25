@@ -32,7 +32,9 @@ class Interpreter:
         snake_head_x, snake_head_y = self.env.snake_head
         accessible_area = 0
         # Search for accessible area using BFS
-        max_search = len(self.env.snake_body) * 2 # Limit the search to twice the snake length
+        # Limit the search to twice the snake length
+        max_search = len(
+            self.env.snake_body) * 2
         queue = deque([(snake_head_x, snake_head_y)])
         visited = set()
         while queue:
@@ -47,12 +49,14 @@ class Interpreter:
             for dx, dy in moves:
                 nx, ny = cx + dx, cy + dy
 
-                if not check_cell_in_board(self.env.game_config.board_size, nx, ny):
+                if not check_cell_in_board(self.env.game_config.board_size, nx,
+                                           ny):
                     continue
 
                 # Check obstacles : Snake body and Red Apples
                 cell = self.env.board[nx][ny]
-                is_obstacle = (cell == CellType.SNAKE or cell == CellType.RED_APPLE)
+                is_obstacle = (
+                        cell == CellType.SNAKE or cell == CellType.RED_APPLE)
 
                 if not is_obstacle and (nx, ny) not in visited:
                     visited.add((nx, ny))
@@ -73,12 +77,14 @@ class Interpreter:
     def __get_green_apple_distance(self, dx, dy):
         distance = 1
         while True:
-            # Get the coordinates of the cell in the given direction at the current distance
+            # Get the coordinates of the cell in the given
+            # direction at the current distance
             nx = self.env.snake_head[0] + (dx * distance)
             ny = self.env.snake_head[1] + (dy * distance)
 
             # If we are out of the board -> no green apple seen
-            if not check_cell_in_board(self.env.game_config.board_size, nx, ny):
+            if not check_cell_in_board(self.env.game_config.board_size, nx,
+                                       ny):
                 return 0
 
             cell = self.env.board[nx][ny]
@@ -109,5 +115,5 @@ class Interpreter:
 
         return (
             danger_up, danger_right, danger_down, danger_left,
-            apple_up,apple_right, apple_down, apple_left,
+            apple_up, apple_right, apple_down, apple_left,
         )
