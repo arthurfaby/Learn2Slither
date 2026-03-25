@@ -28,8 +28,7 @@ def argparse_init():
     parser.add_argument('-dl', '--dont-learn', action="store_true", help='Disable learning.')
     parser.add_argument('-sbs', '--step-by-step', action="store_true", help='Does the simulation runs step by step.')
     parser.add_argument('-v', '--visual', choices=['on', 'off'], default='on', help='Enable/disabled visualization.')
-    parser.add_argument('-n', '--sessions', type=positive_int, help='Number of sessions to run.')
-    parser.add_argument('-f', '--fps', type=positive_int, default=60, help='Frames per second for visualization (default: 60).')
+    parser.add_argument('-n', '--sessions', type=positive_int, default=100, help='Number of sessions to run (default: 100).')
     parser.add_argument('-ss', '--snake-speed', type=int, default=50, help='Snake speed in cells per second (default: 50).')
     parser.add_argument('-bs', '--board-size', type=positive_int, default=10, help='Size of the game board (default: 10).')
     return parser

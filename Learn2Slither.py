@@ -340,7 +340,7 @@ def get_game_config_from_args():
         step_by_step=args.step_by_step,
         visualize=args.visual == 'on',
         sessions_number=args.sessions,
-        fps=args.fps,
+        fps=60,
         snake_speed=args.snake_speed,
         board_size=args.board_size,
     )
