@@ -19,6 +19,7 @@ class Environment:
     snake_body: list[tuple[int, int]]
     direction_has_been_used: bool
     duration: int
+    steps_without_eating: int
 
     def __init__(self, screen: Surface | None, game_config: GameConfig):
         self.screen = screen
@@ -31,6 +32,7 @@ class Environment:
         self.snake_body = []
         self.direction_has_been_used = True
         self.duration = 0
+        self.steps_without_eating = 0
         self.__create_snake()
         for _ in range(config.DEFAULT_GREEN_APPLES):
             self.__add_green_apple()
@@ -40,6 +42,10 @@ class Environment:
     def update(self, action: SnakeDirection | None = None) -> EnvironmentEvent:
         if action is not None:
             self.__update_direction_from_action(action)
+        self.steps_without_eating += 1
+        if self.steps_without_eating >= config.MAX_STARVATION_STEPS:
+            return EnvironmentEvent.DIED
+
         self.duration += 1
         self.direction_has_been_used = True
 
@@ -58,6 +64,7 @@ class Environment:
         if self.board[new_head_x][new_head_y] == CellType.GREEN_APPLE:
             self.__increase_snake_length()
             self.__add_green_apple()
+            self.steps_without_eating = 0
             event = EnvironmentEvent.EATEN_GREEN_APPLE
 
         elif self.board[new_head_x][new_head_y] == CellType.RED_APPLE:
@@ -65,6 +72,7 @@ class Environment:
             self.__add_red_apple()
             if len(self.snake_body) == 0:
                 return EnvironmentEvent.DIED
+            self.steps_without_eating = 0
             event = EnvironmentEvent.EATEN_RED_APPLE
         else:
             event = EnvironmentEvent.NOTHING

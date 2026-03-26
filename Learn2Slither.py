@@ -30,7 +30,7 @@ class Game:
         self.run_step = not self.config.step_by_step
         self.current_state = self.interpreter.get_state()
         self.session = 1
-        self.score_history = [0 for _ in range(LEN_HISTORY_SIZE)]
+        self.score_history = []
         self.max_length = 0
         self.max_duration = 0
         self.last_move_time = 0
@@ -160,7 +160,9 @@ class Game:
         self.current_state = next_state
         return environment_event
 
-    def draw_dashed_line(self, start_pos, end_pos, color, width=1,
+    def draw_dashed_line(self, start_pos: tuple[float, float],
+                         end_pos: tuple[float, float],
+                         color: tuple[int, int, int], width=1,
                          dash_length=10, gap_length=5):
         x1, y1 = start_pos
         x2, y2 = end_pos
@@ -206,7 +208,7 @@ class Game:
                          (area_x, area_y, area_w, area_h), 1)
 
         scale_max = max(self.max_length * 1.1, 1)
-        num_points = len(self.score_history)
+        num_points = LEN_HISTORY_SIZE
 
         ratio_max = self.max_length / scale_max
         y_max_line = area_y + area_h - (ratio_max * area_h)
@@ -214,7 +216,7 @@ class Game:
         self.draw_dashed_line(
             start_pos=(area_x, y_max_line),
             end_pos=(area_x + area_w, y_max_line),
-            color=(200, 50, 50),  # Rouge
+            color=(200, 50, 50),
             width=1,
             dash_length=8,
             gap_length=6
@@ -225,7 +227,10 @@ class Game:
         self.screen.blit(text_max_label, (area_x + 5, y_max_line - 20))
 
         points = []
-        for i, score in enumerate(self.score_history):
+        reversed_history = self.score_history[-num_points:][::-1]
+        for i, score in enumerate(reversed_history):
+            if i >= num_points:
+                break
             x = area_x + (i / (num_points - 1)) * area_w
             ratio = score / scale_max
             y = area_y + area_h - (ratio * area_h)
@@ -241,16 +246,17 @@ class Game:
 
         self.max_length = max(current_len, self.max_length)
         self.max_duration = max(current_dur, self.max_duration)
-
+        self.score_history.append(current_len)
         print(
             f"Session {self.session:4d} ended. Length: {current_len:3d}. "
             f"Max Len: {self.max_length:3d}. "
+            f"Mean Len: "
+            f"{sum(self.score_history) / len(self.score_history):.2f}. "
             f"Max Dur: {self.max_duration:4d}.\r",
             end=""
         )
-        self.score_history.append(current_len)
-        if len(self.score_history) > LEN_HISTORY_SIZE:
-            self.score_history.pop(0)
+        # if len(self.score_history) > LEN_HISTORY_SIZE:
+        #     self.score_history.pop(0)
 
         if not self.config.dont_learn:
             self.agent.update_epsilon()
