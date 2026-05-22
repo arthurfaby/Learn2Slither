@@ -1,3 +1,5 @@
+from tokenize import String
+
 import pygame
 from pygame import Surface
 import config
@@ -33,6 +35,12 @@ class Environment:
         self.direction_has_been_used = True
         self.duration = 0
         self.steps_without_eating = 0
+        self.board_info_dict = {
+            CellType.EMPTY: 'O',
+            CellType.SNAKE: 'S',
+            CellType.GREEN_APPLE: 'G',
+            CellType.RED_APPLE: 'R'
+        }
         self.__create_snake()
         for _ in range(config.DEFAULT_GREEN_APPLES):
             self.__add_green_apple()
@@ -98,6 +106,10 @@ class Environment:
                         self.game_config.cell_size, self.game_config.cell_size)
                 pygame.draw.rect(self.screen, self.board[y][x].get_color(),
                                  rect, int(self.game_config.cell_size))
+                if self.snake_head[0] == y and self.snake_head[1] == x:
+                    pygame.draw.rect(self.screen, config.SNAKE_HEAD_COLOR,
+                                     rect,
+                                     int(self.game_config.cell_size))
                 pygame.draw.rect(self.screen, config.CELL_BORDER_COLOR, rect,
                                  1)
 
@@ -164,3 +176,21 @@ class Environment:
     def __add_red_apple(self):
         x, y = self.__get_random_empty_cell()
         self.board[x][y] = CellType.RED_APPLE
+
+    def print_snake_info(self, session_recap: str, action: SnakeDirection):
+
+        head_x, head_y = self.snake_head
+        info = session_recap + '\n'
+        for x in range(self.game_config.board_size):
+            for y in range(self.game_config.board_size):
+                if x == head_x and y == head_y:
+                    info += 'H'
+                elif x == head_x or y == head_y:
+                    info += self.board_info_dict[self.board[x][y]]
+                else:
+                    info += ' '
+            info += '\n'
+        info += f"Choosing {action.name}\n"
+        print(info, end='')
+        total_lines = self.game_config.board_size + 2
+        print(f"\033[{total_lines}F", end='')

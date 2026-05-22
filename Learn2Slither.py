@@ -35,6 +35,8 @@ class Game:
         self.max_duration = 0
         self.last_move_time = 0
 
+        self.session_recap = "Waiting for the first session to end..."
+
         self.buttons = self._create_buttons()
 
         if self.config.load_path:
@@ -123,6 +125,8 @@ class Game:
                                              self.config.snake_speed + delta))
 
     def handle_input(self):
+        if not self.config.visualize:
+            return
         mouse_pos = pygame.mouse.get_pos()
 
         for event in pygame.event.get():
@@ -151,6 +155,7 @@ class Game:
     def logic_step(self):
         action = self.agent.get_action(self.current_state, is_training=(
             not self.config.dont_learn))
+        self.env.print_snake_info(self.session_recap, action)
         environment_event = self.env.update(action)
         next_state = self.interpreter.get_state()
         reward = self.interpreter.get_reward(environment_event)
@@ -247,13 +252,12 @@ class Game:
         self.max_length = max(current_len, self.max_length)
         self.max_duration = max(current_dur, self.max_duration)
         self.score_history.append(current_len)
-        print(
+        self.session_recap = (
             f"Session {self.session:4d} ended. Length: {current_len:3d}. "
             f"Max Len: {self.max_length:3d}. "
             f"Mean Len: "
             f"{sum(self.score_history) / len(self.score_history):.2f}. "
-            f"Max Dur: {self.max_duration:4d}.\r",
-            end=""
+            f"Max Dur: {self.max_duration:4d}."
         )
         # if len(self.score_history) > LEN_HISTORY_SIZE:
         #     self.score_history.pop(0)
@@ -325,7 +329,7 @@ class Game:
                 if self.config.snake_speed > 0 else False
             should_move = True if self.config.step_by_step else should_move
 
-            if should_move and self.run_step:
+            if should_move and self.run_step or not self.config.visualize:
                 self.run_step = not self.config.step_by_step
 
                 event = self.logic_step()
@@ -334,8 +338,8 @@ class Game:
                     self.handle_session_end()
 
                 self.last_move_time = current_time
-
-            self.render()
+            if self.config.visualize:
+                self.render()
 
         if self.config.save_path:
             self.agent.save_model(self.config.save_path)
