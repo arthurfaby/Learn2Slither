@@ -199,7 +199,7 @@ class Game:
             EnvironmentEvent.DIED, EnvironmentEvent.BOARD_FULL)
 
         if done:
-            self._compute_session_recap(environment_event)
+            self._compute_session_recap()
 
         self.env.print_snake_info(self.session_recap, action, next_state,
                                   reward)
@@ -305,9 +305,6 @@ class Game:
         )
 
     def handle_session_end(self):
-        # if len(self.score_history) > LEN_HISTORY_SIZE:
-        #     self.score_history.pop(0)
-
         if not self.config.dont_learn:
             self.agent.update_epsilon()
         self.env.restart()
