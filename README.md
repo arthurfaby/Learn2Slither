@@ -2,6 +2,8 @@
 
 ## Setup
 
+Tested with Python 3.10.12 and Python 3.12.13. Other Python versions have not been tested.
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate

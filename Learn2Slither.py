@@ -54,7 +54,7 @@ class Game:
                 height=BUTTON_HEIGHT,
                 text="Speed -",
                 font=self.font,
-                action=lambda: self.change_speed(-5),
+                action=lambda: self.change_speed(-50),
                 background_color=(100, 0, 0),
                 hover_background_color=(200, 0, 0), border_color=(200, 0, 0)
             ),
@@ -65,31 +65,20 @@ class Game:
                 height=BUTTON_HEIGHT,
                 text="Speed +",
                 font=self.font,
-                action=lambda: self.change_speed(5),
+                action=lambda: self.change_speed(50),
                 background_color=(0, 100, 0),
                 hover_background_color=(0, 200, 0), border_color=(0, 200, 0)
-            ),
-            Button(
-                x=GAME_WIDTH + PADDING,
-                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 2 - PADDING * 2,
-                width=HALF_BUTTON_WIDTH,
-                height=BUTTON_HEIGHT,
-                text="Speed --",
-                font=self.font,
-                action=lambda: self.change_speed(-100),
-                background_color=(100, 0, 0),
-                hover_background_color=(200, 0, 0), border_color=(200, 0, 0)
             ),
             Button(
                 x=GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH,
                 y=WINDOW_HEIGHT - BUTTON_HEIGHT * 2 - PADDING * 2,
                 width=HALF_BUTTON_WIDTH,
                 height=BUTTON_HEIGHT,
-                text="Speed ++",
+                text="Toggle Manual",
                 font=self.font,
-                action=lambda: self.change_speed(100),
-                background_color=(0, 100, 0),
-                hover_background_color=(0, 200, 0), border_color=(0, 200, 0)
+                action=self.toggle_manual,
+                background_color=(0, 0, 100),
+                hover_background_color=(0, 0, 200), border_color=(0, 0, 200)
             ),
             Button(
                 x=GAME_WIDTH + PADDING,
@@ -121,6 +110,9 @@ class Game:
 
     def toggle_learning(self):
         self.config.dont_learn = not self.config.dont_learn
+
+    def toggle_manual(self):
+        self.config.manual = not self.config.manual
 
     def change_speed(self, delta: int):
         self.config.snake_speed = max(0, min(1000,
@@ -327,7 +319,16 @@ class Game:
             True, (0, 255, 0) if self.config.step_by_step else (255, 0, 0)
         )
         self.screen.blit(step_by_step_text,
-                         (GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH,
+                         (GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH / 2,
+                          2 * PADDING
+                          + session_speed_length_text.get_height()))
+
+        manual_text = self.font.render(
+            "Manual",
+            True, (0, 255, 0) if self.config.manual else (255, 0, 0)
+        )
+        self.screen.blit(manual_text,
+                         (GAME_WIDTH + 2 * PADDING + 1.2 * HALF_BUTTON_WIDTH,
                           2 * PADDING
                           + session_speed_length_text.get_height()))
 

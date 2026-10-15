@@ -56,12 +56,9 @@ class Environment:
         self.duration += 1
         self.direction_has_been_used = True
 
-        # Compute new head position
         new_head_x = self.snake_head[0] + self.snake_direction[0]
         new_head_y = self.snake_head[1] + self.snake_direction[1]
 
-        # Check for collisions
-        # Allow moving onto the tail position: the tail will vacate this step
         is_tail_cell = (new_head_x, new_head_y) == self.snake_body[0]
         if (not check_cell_in_board(
                 self.game_config.board_size,
@@ -72,26 +69,30 @@ class Environment:
             return EnvironmentEvent.DIED
 
         if self.board[new_head_x][new_head_y] == CellType.GREEN_APPLE:
-            self.__increase_snake_length()
-            self.__add_green_apple()
             self.steps_without_eating = 0
             event = EnvironmentEvent.EATEN_GREEN_APPLE
 
         elif self.board[new_head_x][new_head_y] == CellType.RED_APPLE:
             self.__decrease_snake_length()
-            self.__add_red_apple()
             if len(self.snake_body) == 0:
                 return EnvironmentEvent.DIED
             self.steps_without_eating = 0
             event = EnvironmentEvent.EATEN_RED_APPLE
         else:
             event = EnvironmentEvent.NOTHING
-        tail_x, tail_y = self.snake_body.pop(0)
+
+        if event != EnvironmentEvent.EATEN_GREEN_APPLE:
+            tail_x, tail_y = self.snake_body.pop(0)
+            self.board[tail_x][tail_y] = CellType.EMPTY
+
         self.snake_body.append((new_head_x, new_head_y))
         self.board[new_head_x][new_head_y] = CellType.SNAKE
         self.snake_head = (new_head_x, new_head_y)
-        if (tail_x, tail_y) != (new_head_x, new_head_y):
-            self.board[tail_x][tail_y] = CellType.EMPTY
+
+        if event == EnvironmentEvent.EATEN_GREEN_APPLE:
+            self.__add_green_apple()
+        elif event == EnvironmentEvent.EATEN_RED_APPLE:
+            self.__add_red_apple()
 
         return event
 
@@ -127,10 +128,6 @@ class Environment:
         opposite = (-self.snake_direction[0], -self.snake_direction[1])
         if new_dir != opposite:
             self.snake_direction = new_dir
-
-    def __increase_snake_length(self):
-        tail_x, tail_y = self.snake_body[0]
-        self.snake_body.insert(0, (tail_x, tail_y))
 
     def __decrease_snake_length(self):
         if len(self.snake_body) >= 1:
@@ -208,7 +205,7 @@ class Environment:
             info += '\n'
         action_name = action.name if action is not None else "---"
         info += (f"{state} -> "
-                 f"Choosed {action_name:<10} (Reward: {reward}){"":<10}\n")
+                 f"Choosed {action_name:<10} (Reward: {reward}){'':<10}\n")
         info += session_recap + '\n'
         print(info, end='')
         total_lines = self.game_config.board_size + 4
