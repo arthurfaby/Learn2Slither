@@ -34,7 +34,7 @@ class Interpreter:
             return 1
         return 0
 
-    def __get_green_apple_distance(self, dx, dy):
+    def __green_apple_in_direction(self, dx, dy):
         distance = 1
         while True:
             # Get the coordinates of the cell in the given
@@ -68,10 +68,10 @@ class Interpreter:
         danger_left = self.__is_danger(head_x, head_y - 1)
         danger_right = self.__is_danger(head_x, head_y + 1)
 
-        apple_up = self.__get_green_apple_distance(-1, 0)
-        apple_down = self.__get_green_apple_distance(1, 0)
-        apple_left = self.__get_green_apple_distance(0, -1)
-        apple_right = self.__get_green_apple_distance(0, 1)
+        apple_up = self.__green_apple_in_direction(-1, 0)
+        apple_down = self.__green_apple_in_direction(1, 0)
+        apple_left = self.__green_apple_in_direction(0, -1)
+        apple_right = self.__green_apple_in_direction(0, 1)
 
         return (
             danger_up, danger_right, danger_down, danger_left,

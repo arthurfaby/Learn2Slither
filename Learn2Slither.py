@@ -369,8 +369,6 @@ class Game:
                                   0)
         while self.running:
             if self.config.sessions_number < self.session:
-                print(self.session_recap)
-                print("Max sessions reached.")
                 break
 
             self.handle_input()
@@ -400,6 +398,9 @@ class Game:
         if self.config.save_path:
             self.agent.save_model(self.config.save_path)
         pygame.quit()
+
+        print(self.session_recap)
+        print("Max sessions reached.")
 
 
 def get_game_config_from_args():
