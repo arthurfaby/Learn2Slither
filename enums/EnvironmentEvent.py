@@ -6,3 +6,4 @@ class EnvironmentEvent(Enum):
     EATEN_GREEN_APPLE = 1
     EATEN_RED_APPLE = 2
     DIED = 3
+    BOARD_FULL = 4

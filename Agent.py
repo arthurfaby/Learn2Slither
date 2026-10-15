@@ -29,9 +29,7 @@ class Agent:
         self.min_epsilon = config.MIN_EPSILON
 
     def get_q_values(self, state: QStateType) -> QValuesType:
-        if state not in self.q_table:
-            self.q_table[state] = [0.0, 0.0, 0.0, 0.0]
-        return self.q_table[state]
+        return self.q_table.get(state, [0.0, 0.0, 0.0, 0.0])
 
     def get_action(self, state, is_training=False) -> SnakeDirection:
         if is_training and random.random() < self.epsilon:
@@ -48,16 +46,20 @@ class Agent:
             return random.choice(actions_with_max_q)
 
     def learn(self, state: QStateType, action: SnakeDirection, reward: int,
-              next_state: QStateType):
+              next_state: QStateType, done: bool = False):
+        if self.game_config.dont_learn:
+            return
         if not (0 <= action.get_value() <= 3):
             raise ValueError("Action must be between 0 and 3")
-        current_q = self.get_q_values(state)[action.get_value()]
-        max_future_q = max(self.get_q_values(next_state))
+        q_values = self.get_q_values(state)
+        current_q = q_values[action.get_value()]
+        max_future_q = 0.0 if done else max(self.get_q_values(next_state))
         # Bellman equation
         new_q = current_q + self.learning_rate * (
                 reward + self.discount_factor * max_future_q - current_q)
 
-        self.q_table[state][action.get_value()] = new_q
+        q_values[action.get_value()] = new_q
+        self.q_table[state] = q_values
 
     def update_epsilon(self):
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)

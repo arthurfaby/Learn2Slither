@@ -1,5 +1,3 @@
-from collections import deque
-
 import config
 from Environment import Environment
 from enums.CellType import CellType
@@ -16,52 +14,14 @@ class Interpreter:
 
     def get_reward(self, event: EnvironmentEvent) -> int:
         match event:
-            case EnvironmentEvent.EATEN_GREEN_APPLE:
+            case (EnvironmentEvent.EATEN_GREEN_APPLE
+                  | EnvironmentEvent.BOARD_FULL):
                 return config.GREEN_APPLE_REWARD
             case EnvironmentEvent.EATEN_RED_APPLE:
                 return config.RED_APPLE_REWARD
             case EnvironmentEvent.DIED:
                 return config.DEATH_REWARD
-        accessible_area = self.__get_accessible_area()
-        if accessible_area <= len(self.env.snake_body):
-            return config.NOT_ACCESSIBLE_AREA_REWARD
         return config.NOTHING_REWARD
-
-    def __get_accessible_area(self) -> int:
-        # If nothing happened, check for accessible area
-        snake_head_x, snake_head_y = self.env.snake_head
-        accessible_area = 0
-        # Search for accessible area using BFS
-        # Limit the search to twice the snake length
-        max_search = len(
-            self.env.snake_body) * 2
-        queue = deque([(snake_head_x, snake_head_y)])
-        visited = set()
-        while queue:
-            cx, cy = queue.popleft()
-            accessible_area += 1
-
-            if accessible_area > max_search:
-                return accessible_area
-
-            # Check all 4 possible moves
-            moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            for dx, dy in moves:
-                nx, ny = cx + dx, cy + dy
-
-                if not check_cell_in_board(self.env.game_config.board_size, nx,
-                                           ny):
-                    continue
-
-                # Check obstacles : Snake body and Red Apples
-                cell = self.env.board[nx][ny]
-                is_obstacle = (
-                        cell == CellType.SNAKE or cell == CellType.RED_APPLE)
-
-                if not is_obstacle and (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    queue.append((nx, ny))
-        return accessible_area
 
     def __is_danger(self, x, y):
         if not check_cell_in_board(self.env.game_config.board_size, x, y):

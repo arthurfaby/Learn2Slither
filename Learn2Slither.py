@@ -71,7 +71,7 @@ class Game:
             ),
             Button(
                 x=GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH,
-                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 2 - PADDING * 2,
+                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 3 - PADDING * 3,
                 width=HALF_BUTTON_WIDTH,
                 height=BUTTON_HEIGHT,
                 text="Toggle Manual",
@@ -92,8 +92,8 @@ class Game:
                 hover_background_color=(0, 0, 200), border_color=(0, 0, 200)
             ),
             Button(
-                x=GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH,
-                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 3 - PADDING * 3,
+                x=GAME_WIDTH + PADDING,
+                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 2 - PADDING * 2,
                 width=HALF_BUTTON_WIDTH,
                 height=BUTTON_HEIGHT,
                 text="Step-by-step",
@@ -102,7 +102,22 @@ class Game:
                 background_color=(0, 0, 100),
                 hover_background_color=(0, 0, 200), border_color=(0, 0, 200)
             ),
+            Button(
+                x=GAME_WIDTH + 2 * PADDING + HALF_BUTTON_WIDTH,
+                y=WINDOW_HEIGHT - BUTTON_HEIGHT * 2 - PADDING * 2,
+                width=HALF_BUTTON_WIDTH,
+                height=BUTTON_HEIGHT,
+                text="Next step",
+                font=self.font,
+                action=self.set_run_step,
+                background_color=(100, 100, 0),
+                hover_background_color=(200, 200, 0),
+                border_color=(200, 200, 0)
+            ),
         ]
+
+    def set_run_step(self):
+        self.run_step = True
 
     def toggle_step_by_step(self):
         self.config.step_by_step = not self.config.step_by_step
@@ -146,6 +161,8 @@ class Game:
                         self.change_speed(-5)
                 if event.key == pygame.K_s:
                     self.toggle_step_by_step()
+                if event.key == pygame.K_m:
+                    self.toggle_manual()
                 if event.key == pygame.K_l:
                     self.toggle_learning()
                 if event.key == pygame.K_SPACE:
@@ -178,14 +195,17 @@ class Game:
         environment_event = self.env.update(action)
         next_state = self.interpreter.get_state()
         reward = self.interpreter.get_reward(environment_event)
+        done = environment_event in (
+            EnvironmentEvent.DIED, EnvironmentEvent.BOARD_FULL)
 
-        if environment_event == EnvironmentEvent.DIED:
-            self._compute_session_recap()
+        if done:
+            self._compute_session_recap(environment_event)
 
         self.env.print_snake_info(self.session_recap, action, next_state,
                                   reward)
 
-        self.agent.learn(self.current_state, action, reward, next_state)
+        self.agent.learn(self.current_state, action, reward, next_state,
+                         done=done)
 
         self.current_state = next_state
         return environment_event
@@ -372,7 +392,8 @@ class Game:
 
                 event = self.logic_step()
 
-                if event is not None and event == EnvironmentEvent.DIED:
+                if event in (EnvironmentEvent.DIED,
+                             EnvironmentEvent.BOARD_FULL):
                     self.handle_session_end()
 
                 self.last_move_time = current_time

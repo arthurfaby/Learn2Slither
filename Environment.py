@@ -90,7 +90,8 @@ class Environment:
         self.snake_head = (new_head_x, new_head_y)
 
         if event == EnvironmentEvent.EATEN_GREEN_APPLE:
-            self.__add_green_apple()
+            if not self.__add_green_apple():
+                return EnvironmentEvent.BOARD_FULL
         elif event == EnvironmentEvent.EATEN_RED_APPLE:
             self.__add_red_apple()
 
@@ -134,18 +135,23 @@ class Environment:
             tail_x, tail_y = self.snake_body.pop(0)
             self.board[tail_x][tail_y] = CellType.EMPTY
 
-    def __get_random_empty_cell(self) -> tuple[int, int]:
-        while True:
-            x = random.randint(0, self.game_config.board_size - 1)
-            y = random.randint(0, self.game_config.board_size - 1)
-            if self.board[x][y] == CellType.EMPTY:
-                return x, y
+    def __get_random_empty_cell(self) -> tuple[int, int] | None:
+        empty_cells = [
+            (x, y)
+            for x in range(self.game_config.board_size)
+            for y in range(self.game_config.board_size)
+            if self.board[x][y] == CellType.EMPTY
+        ]
+        return random.choice(empty_cells) if empty_cells else None
 
     def __is_cell_empty(self, x: int, y: int) -> bool:
         return self.board[x][y] == CellType.EMPTY
 
     def __create_snake(self):
-        x, y = self.__get_random_empty_cell()
+        cell = self.__get_random_empty_cell()
+        if cell is None:
+            raise ValueError("Cannot place a snake on a full board.")
+        x, y = cell
         # Randomly shuffle directions to try
         directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         random.shuffle(directions)
@@ -170,13 +176,21 @@ class Environment:
                     self.board[nx][ny] = CellType.SNAKE
                 return
 
-    def __add_green_apple(self):
-        x, y = self.__get_random_empty_cell()
+    def __add_green_apple(self) -> bool:
+        cell = self.__get_random_empty_cell()
+        if cell is None:
+            return False
+        x, y = cell
         self.board[x][y] = CellType.GREEN_APPLE
+        return True
 
-    def __add_red_apple(self):
-        x, y = self.__get_random_empty_cell()
+    def __add_red_apple(self) -> bool:
+        cell = self.__get_random_empty_cell()
+        if cell is None:
+            return False
+        x, y = cell
         self.board[x][y] = CellType.RED_APPLE
+        return True
 
     def print_snake_info(self, session_recap: str,
                          action: SnakeDirection | None,
