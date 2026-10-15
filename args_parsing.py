@@ -42,4 +42,6 @@ def argparse_init():
                         help='Snake speed in cells per second (default: 50).')
     parser.add_argument('-bs', '--board-size', type=positive_int, default=10,
                         help='Size of the game board (default: 10).')
+    parser.add_argument('-m', '--manual', action="store_true",
+                        help='Play manually with arrow keys.')
     return parser

@@ -21,7 +21,7 @@ class Button:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.current_background_color, self.rect)
-        pygame.draw.rect(screen, self.border_color, self.rect, 2)  # Bordure
+        pygame.draw.rect(screen, self.border_color, self.rect, 2)
 
         text_surf = self.font.render(self.text, True, (255, 255, 255))
         text_rect = text_surf.get_rect(center=self.rect.center)

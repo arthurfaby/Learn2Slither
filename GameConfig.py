@@ -13,6 +13,7 @@ class GameConfig:
             fps: int = 60,
             snake_speed: int = 5,
             board_size: int = 10,
+            manual: bool = False,
     ):
         self.save_path = save_path
         self.load_path = load_path
@@ -25,3 +26,4 @@ class GameConfig:
         self.snake_speed = snake_speed if self.visualize else float('inf')
         self.board_size = board_size
         self.cell_size = config.WINDOW_HEIGHT / board_size
+        self.manual = manual

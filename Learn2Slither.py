@@ -8,6 +8,7 @@ from config import PADDING, HALF_BUTTON_WIDTH, WINDOW_WIDTH, WINDOW_HEIGHT, \
     GAME_WIDTH, BUTTON_HEIGHT, APP_NAME, \
     BACKGROUND_COLOR, LEN_HISTORY_SIZE
 from enums.EnvironmentEvent import EnvironmentEvent
+from enums.SnakeDirection import SnakeDirection
 from ui.Button import Button
 
 
@@ -28,6 +29,7 @@ class Game:
 
         self.running = True
         self.run_step = not self.config.step_by_step
+        self.pending_action = None
         self.current_state = self.interpreter.get_state()
         self.session = 1
         self.score_history = []
@@ -136,10 +138,20 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.change_speed(5)
-                if event.key == pygame.K_DOWN:
-                    self.change_speed(-5)
+                if self.config.manual:
+                    if event.key == pygame.K_UP:
+                        self.pending_action = SnakeDirection.UP
+                    elif event.key == pygame.K_DOWN:
+                        self.pending_action = SnakeDirection.DOWN
+                    elif event.key == pygame.K_LEFT:
+                        self.pending_action = SnakeDirection.LEFT
+                    elif event.key == pygame.K_RIGHT:
+                        self.pending_action = SnakeDirection.RIGHT
+                else:
+                    if event.key == pygame.K_UP:
+                        self.change_speed(5)
+                    if event.key == pygame.K_DOWN:
+                        self.change_speed(-5)
                 if event.key == pygame.K_s:
                     self.toggle_step_by_step()
                 if event.key == pygame.K_l:
@@ -152,13 +164,34 @@ class Game:
         for button in self.buttons:
             button.check_hover(mouse_pos)
 
+    _DIRECTION_MAP = {
+        SnakeDirection.UP: (-1, 0),
+        SnakeDirection.DOWN: (1, 0),
+        SnakeDirection.LEFT: (0, -1),
+        SnakeDirection.RIGHT: (0, 1),
+    }
+
     def logic_step(self):
-        action = self.agent.get_action(self.current_state, is_training=(
-            not self.config.dont_learn))
-        self.env.print_snake_info(self.session_recap, action)
+        if self.config.manual:
+            action = self.pending_action
+            self.pending_action = None
+            if action is None:
+                return None
+            cur = self.env.snake_direction
+            if self._DIRECTION_MAP[action] == (-cur[0], -cur[1]):
+                return None
+        else:
+            action = self.agent.get_action(self.current_state, is_training=(
+                not self.config.dont_learn))
         environment_event = self.env.update(action)
         next_state = self.interpreter.get_state()
         reward = self.interpreter.get_reward(environment_event)
+
+        if environment_event == EnvironmentEvent.DIED:
+            self._compute_session_recap()
+
+        self.env.print_snake_info(self.session_recap, action, next_state,
+                                  reward)
 
         self.agent.learn(self.current_state, action, reward, next_state)
 
@@ -245,10 +278,9 @@ class Game:
         if len(points) > 1:
             pygame.draw.lines(self.screen, (0, 255, 255), False, points, 2)
 
-    def handle_session_end(self):
+    def _compute_session_recap(self):
         current_len = len(self.env.snake_body)
         current_dur = self.env.duration
-
         self.max_length = max(current_len, self.max_length)
         self.max_duration = max(current_dur, self.max_duration)
         self.score_history.append(current_len)
@@ -259,6 +291,8 @@ class Game:
             f"{sum(self.score_history) / len(self.score_history):.2f}. "
             f"Max Dur: {self.max_duration:4d}."
         )
+
+    def handle_session_end(self):
         # if len(self.score_history) > LEN_HISTORY_SIZE:
         #     self.score_history.pop(0)
 
@@ -313,9 +347,12 @@ class Game:
         self.clock.tick(self.config.fps)
 
     def run(self):
+        self.env.print_snake_info(self.session_recap, None, self.current_state,
+                                  0)
         while self.running:
             if self.config.sessions_number < self.session:
-                print("\nMax sessions reached.")
+                print(self.session_recap)
+                print("Max sessions reached.")
                 break
 
             self.handle_input()
@@ -334,7 +371,7 @@ class Game:
 
                 event = self.logic_step()
 
-                if event == EnvironmentEvent.DIED:
+                if event is not None and event == EnvironmentEvent.DIED:
                     self.handle_session_end()
 
                 self.last_move_time = current_time
@@ -353,6 +390,11 @@ def get_game_config_from_args():
         parser.error(
             "Incompatible arguments: You cannot use "
             "--step-by-step when --visual is 'off'.")
+    if args.visual == 'off' and args.manual:
+        parser.error(
+            "Incompatible arguments: You cannot use "
+            "--manual when --visual is 'off'.")
+
     if args.dont_learn is True and args.save is not None:
         parser.error(
             "Incompatible arguments: You cannot use "
@@ -373,6 +415,7 @@ def get_game_config_from_args():
         fps=60,
         snake_speed=args.snake_speed,
         board_size=args.board_size,
+        manual=args.manual,
     )
 
 

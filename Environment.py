@@ -1,9 +1,8 @@
-from tokenize import String
-
 import pygame
 from pygame import Surface
 import config
 from GameConfig import GameConfig
+from custom_types import QStateType
 from enums.CellType import CellType
 import random
 
@@ -62,11 +61,14 @@ class Environment:
         new_head_y = self.snake_head[1] + self.snake_direction[1]
 
         # Check for collisions
+        # Allow moving onto the tail position: the tail will vacate this step
+        is_tail_cell = (new_head_x, new_head_y) == self.snake_body[0]
         if (not check_cell_in_board(
                 self.game_config.board_size,
                 new_head_x,
                 new_head_y)
-                or self.board[new_head_x][new_head_y] == CellType.SNAKE):
+                or (self.board[new_head_x][new_head_y] == CellType.SNAKE
+                    and not is_tail_cell)):
             return EnvironmentEvent.DIED
 
         if self.board[new_head_x][new_head_y] == CellType.GREEN_APPLE:
@@ -88,7 +90,8 @@ class Environment:
         self.snake_body.append((new_head_x, new_head_y))
         self.board[new_head_x][new_head_y] = CellType.SNAKE
         self.snake_head = (new_head_x, new_head_y)
-        self.board[tail_x][tail_y] = CellType.EMPTY
+        if (tail_x, tail_y) != (new_head_x, new_head_y):
+            self.board[tail_x][tail_y] = CellType.EMPTY
 
         return event
 
@@ -114,15 +117,16 @@ class Environment:
                                  1)
 
     def __update_direction_from_action(self, action: SnakeDirection):
-        if action == SnakeDirection.UP and self.snake_direction != (1, 0):
-            self.snake_direction = (-1, 0)
-        elif action == SnakeDirection.DOWN and self.snake_direction != (-1, 0):
-            self.snake_direction = (1, 0)
-        elif action == SnakeDirection.LEFT and self.snake_direction != (0, 1):
-            self.snake_direction = (0, -1)
-        elif action == SnakeDirection.RIGHT and self.snake_direction != (0,
-                                                                         -1):
-            self.snake_direction = (0, 1)
+        direction_map = {
+            SnakeDirection.UP: (-1, 0),
+            SnakeDirection.DOWN: (1, 0),
+            SnakeDirection.LEFT: (0, -1),
+            SnakeDirection.RIGHT: (0, 1),
+        }
+        new_dir = direction_map[action]
+        opposite = (-self.snake_direction[0], -self.snake_direction[1])
+        if new_dir != opposite:
+            self.snake_direction = new_dir
 
     def __increase_snake_length(self):
         tail_x, tail_y = self.snake_body[0]
@@ -177,20 +181,35 @@ class Environment:
         x, y = self.__get_random_empty_cell()
         self.board[x][y] = CellType.RED_APPLE
 
-    def print_snake_info(self, session_recap: str, action: SnakeDirection):
+    def print_snake_info(self, session_recap: str,
+                         action: SnakeDirection | None,
+                         state: QStateType, reward: int):
+
+        info = ""
 
         head_x, head_y = self.snake_head
-        info = session_recap + '\n'
-        for x in range(self.game_config.board_size):
-            for y in range(self.game_config.board_size):
-                if x == head_x and y == head_y:
-                    info += 'H'
-                elif x == head_x or y == head_y:
-                    info += self.board_info_dict[self.board[x][y]]
+        vhead_x, vhead_y = head_x + 1, head_y + 1
+
+        board_size = self.game_config.board_size
+        board_size_with_walls = board_size + 2
+        for x in range(board_size_with_walls):
+            for y in range(board_size_with_walls):
+                if x == vhead_x or y == vhead_y:
+                    if (x == 0 or y == 0 or x == board_size_with_walls - 1 or
+                            y == board_size_with_walls - 1):
+                        info += 'W'
+                    elif x == vhead_x and y == vhead_y:
+                        info += 'H'
+                    else:
+                        info += self.board_info_dict[self.board[x - 1][y - 1]]
                 else:
                     info += ' '
+
             info += '\n'
-        info += f"Choosing {action.name}\n"
+        action_name = action.name if action is not None else "---"
+        info += (f"{state} -> "
+                 f"Choosed {action_name:<10} (Reward: {reward}){"":<10}\n")
+        info += session_recap + '\n'
         print(info, end='')
-        total_lines = self.game_config.board_size + 2
+        total_lines = self.game_config.board_size + 4
         print(f"\033[{total_lines}F", end='')
